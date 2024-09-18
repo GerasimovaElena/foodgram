@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect
 
-# Create your views here.
+from .models import Recipe
+
+
+def redirect_to_recipe(request, short_link):
+    recipe = get_object_or_404(Recipe, short_link=short_link)
+    recipe_detail_url = f'/api/recipes/{recipe.pk}/'
+    return redirect(recipe_detail_url)

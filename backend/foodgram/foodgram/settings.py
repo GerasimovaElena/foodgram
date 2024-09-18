@@ -21,11 +21,10 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'users.apps.UsergsConfig',
     'recipes.apps.RecipesConfig',
-    'shopping.apps.ShoppingConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
-    # 'django_filters',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +66,17 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('POSTGRES_DB', 'django'),
+#         'USER': os.getenv('POSTGRES_USER', 'django'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+#         'HOST': os.getenv('DB_HOST', ''),
+#         'PORT': os.getenv('DB_PORT', 5432)
+#     }
+# }
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -82,7 +92,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 

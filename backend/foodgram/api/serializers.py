@@ -5,9 +5,11 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from djoser.serializers import UserSerializer
 
-from recipes.models import Tag
+from recipes.models import Tag, Ingredient
+from users.models import Subscription
 
 User = get_user_model()
+
 
 class Base64ImageField(serializers.ImageField):
 
@@ -22,6 +24,7 @@ class Base64ImageField(serializers.ImageField):
 
 class CustomUserSerializer(UserSerializer):
     avatar = Base64ImageField(required=False, allow_null=True)
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         model = User
@@ -34,6 +37,13 @@ class CustomUserSerializer(UserSerializer):
             'is_subscribed',
             'avatar',
         )
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        current_user = request.user
+            # if current_user == obj:
+            #     return False
+        return Subscription.objects.filter(user=current_user, subscribed_to=obj).exists()
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
@@ -48,3 +58,9 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'slug')
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ('id', 'name', 'measurement_unit')
