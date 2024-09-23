@@ -1,6 +1,7 @@
 import random
 
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 
 from .constants import CHARACTERS, SHORT_LINK_LENGTH
@@ -66,7 +67,14 @@ class Recipe(models.Model):
         max_length=256
     )
     text = models.TextField('Текстовое описание')
-    cooking_time = models.PositiveIntegerField('Время приготовления')
+    cooking_time = models.PositiveIntegerField(
+        'Время приготовления',
+        validators=[MinValueValidator(1)]
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации рецепта',
+        auto_now_add=True
+    )
     short_link = models.CharField(
         'Короткая ссылка',
         max_length=SHORT_LINK_LENGTH,
@@ -76,6 +84,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.name
@@ -90,7 +99,7 @@ class Recipe(models.Model):
             short_link = ''.join(
                 random.choice(CHARACTERS) for _ in range(SHORT_LINK_LENGTH)
             )
-            if not Recipe.objects.filter(short_code=short_link).exists():
+            if not Recipe.objects.filter(short_link=short_link).exists():
                 return short_link
 
 
@@ -105,7 +114,10 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Ингредиент'
     )
-    amount = models.IntegerField('Кол-во')
+    amount = models.PositiveIntegerField(
+        'Кол-во',
+        validators=[MinValueValidator(1)]
+    )
 
     class Meta:
         verbose_name = 'Рецепт-Ингредиент'

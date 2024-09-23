@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core import validators
 from django.db import models
 
 
@@ -14,6 +15,16 @@ class CustomUser(AbstractUser):
         error_messages={
             'unique': 'Данный username занят'
         },
+        validators=[
+            validators.RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message=(
+                    'Username может содержать только буквы, цифры и '
+                    'символы @ . + - _'
+                ),
+                code='invalid_username'
+            )
+        ],
         max_length=150
     )
     first_name = models.CharField('Имя', max_length=150)
