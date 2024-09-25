@@ -122,6 +122,8 @@ REST_FRAMEWORK = {
 
 CSRF_COOKIE_SECURE = True
 
+CSRF_TRUSTED_ORIGINS = ['https://doradog.ddnsking.com']
+
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
