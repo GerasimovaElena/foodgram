@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from djoser.serializers import UserSerializer
 
-from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient
+from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient, Favorite, ShoppingCart
 from users.models import Subscription
 
 from .mixins import Base64ImageField
@@ -172,14 +172,14 @@ class RecipeListSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user
         if user.is_authenticated:
-            return obj.favorited_by.filter(id=user.id).exists()
+            return Favorite.objects.filter(user=user, recipe=obj).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         user = request.user
         if user.is_authenticated:
-            return obj.shopping_cart.filter(id=user.id).exists()
+            return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
         return False
 
 

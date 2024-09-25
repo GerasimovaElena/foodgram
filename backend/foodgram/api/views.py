@@ -11,8 +11,7 @@ from rest_framework.views import APIView
 from djoser.views import UserViewSet
 from django.shortcuts import get_object_or_404
 
-from recipes.models import Tag, Ingredient, Recipe, ShoppingCart, Favorite
-from users.models import Subscription
+from recipes.models import Tag, Ingredient, Recipe, ShoppingCart, Favorite, RecipeIngredient
 
 from .filters import NameSearchFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
@@ -124,10 +123,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in [
             'create',
-            'add_to_cart',
-            'remove_from_cart',
-            'add_to_favorites',
-            'remove_from_favorites'
+            'manage_favorites',
+            'manage_cart'
         ]:
             return (IsAuthenticated(),)
         if self.action in ['update', 'partial_update', 'destroy']:
@@ -154,22 +151,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    def _add_to_list(self, model_class, request, pk):
-        recipe = self.get_object()
-        instance, created = model_class.objects.get_or_create(
-            user=request.user,
-            recipe=recipe
-        )
-        if created:
-            serializer = RecipeMiniSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(
-            {"detail": "Рецепт уже в списке"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    def _manage_list(self, model_class, request, pk):
 
-    def _remove_from_list(self, model_class, request, pk):
         recipe = self.get_object()
+
+        if request.method == 'POST':
+            instance, created = model_class.objects.get_or_create(
+                user=request.user,
+                recipe=recipe
+            )
+            if created:
+                serializer = RecipeMiniSerializer(recipe)
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(
+                {"detail": "Рецепт уже в списке"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             item = model_class.objects.get(user=request.user, recipe=recipe)
             item.delete()
@@ -180,21 +181,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    @action(detail=True, methods=['post'], url_path='favorite')
-    def add_to_favorites(self, request, pk=None):
-        return self._add_to_list(Favorite, request, pk)
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    def manage_favorites(self, request, pk=None):
+        """Добавление или удаление из избранного"""
+        return self._manage_list(Favorite, request, pk)
 
-    @action(detail=True, methods=['delete'], url_path='favorite')
-    def remove_from_favorites(self, request, pk=None):
-        return self._remove_from_list(Favorite, request, pk)
-
-    @action(detail=True, methods=['post'], url_path='shopping_cart')
-    def add_to_cart(self, request, pk=None):
-        return self._add_to_list(ShoppingCart, request, pk)
-
-    @action(detail=True, methods=['delete'], url_path='shopping_cart')
-    def remove_from_cart(self, request, pk=None):
-        return self._remove_from_list(ShoppingCart, request, pk)
+    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    def manage_cart(self, request, pk=None):
+        """Добавление или удаление из корзины"""
+        return self._manage_list(ShoppingCart, request, pk)
 
 
 class DownloadCartView(APIView):
@@ -214,18 +209,19 @@ class DownloadCartView(APIView):
             recipe = item.recipe
             ingredients = recipe.ingredients.all()
             for ingredient in ingredients:
-                amount = (
-                    ingredient.recipeingredient_set
-                    .get(ingredient=ingredient)
-                    .amount
+                recipe_ingredients = (
+                    RecipeIngredient.objects
+                    .filter(recipe=recipe, ingredient=ingredient)
                 )
-                if ingredient.name in ingredients_summary:
-                    ingredients_summary[ingredient.name]['amount'] += amount
-                else:
-                    ingredients_summary[ingredient.name] = {
-                        'amount': amount,
-                        'measurement_unit': ingredient.measurement_unit
-                    }
+                for recipe_ingredient in recipe_ingredients:
+                    amount = recipe_ingredient.amount
+                    if ingredient.name in ingredients_summary:
+                        ingredients_summary[ingredient.name]['amount'] += amount
+                    else:
+                        ingredients_summary[ingredient.name] = {
+                            'amount': amount,
+                            'measurement_unit': ingredient.measurement_unit
+                        }
 
         output = StringIO()
         writer = csv.writer(output)
