@@ -120,6 +120,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+CSRF_COOKIE_SECURE = True
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
