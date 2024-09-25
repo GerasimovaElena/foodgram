@@ -17,7 +17,7 @@ Foodgram - это веб-приложение для любителей гото
 
 ## Использование
 ### Спецификация API
-Спецификация API доступна по адресу: [https://doradog.ddnsking.com/api/docs/](http://localhost/api/docs/)
+Спецификация API доступна по адресу: [https://doradog.ddnsking.com/api/docs/](https://doradog.ddnsking.com/api/docs/)
 
 ### Основные API маршруты
 - `GET /api/recipes/` - Получение списка рецептов
