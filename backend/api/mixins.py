@@ -14,7 +14,7 @@ class Base64ImageField(ImageField):
                     'Поле не может быть пустым'
                 )
             return None
-        
+
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]

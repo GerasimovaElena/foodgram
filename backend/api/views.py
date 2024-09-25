@@ -2,24 +2,24 @@ import csv
 from io import StringIO
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status
+from djoser.views import UserViewSet
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from djoser.views import UserViewSet
-from django.shortcuts import get_object_or_404
-
-from recipes.models import Tag, Ingredient, Recipe, ShoppingCart, Favorite, RecipeIngredient
 
 from .filters import NameSearchFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (
-    CustomUserSerializer, UserAvatarSerializer, TagSerializer,
-    IngredientSerializer, RecipeCreateSerializer, RecipeListSerializer,
-    RecipeMiniSerializer, SubscriptionSerializer, SubscribeSerializer
-)
+from .serializers import (CustomUserSerializer, IngredientSerializer,
+                          RecipeCreateSerializer, RecipeListSerializer,
+                          RecipeMiniSerializer, SubscribeSerializer,
+                          SubscriptionSerializer, TagSerializer,
+                          UserAvatarSerializer)
 
 User = get_user_model()
 
@@ -183,12 +183,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
     def manage_favorites(self, request, pk=None):
-        """Добавление или удаление из избранного"""
         return self._manage_list(Favorite, request, pk)
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def manage_cart(self, request, pk=None):
-        """Добавление или удаление из корзины"""
         return self._manage_list(ShoppingCart, request, pk)
 
 
@@ -204,7 +202,7 @@ class DownloadCartView(APIView):
                 status=status.HTTP_200_OK
             )
 
-        ingredients_summary = {}
+        summary = {}
         for item in shopping_cart_items:
             recipe = item.recipe
             ingredients = recipe.ingredients.all()
@@ -215,10 +213,10 @@ class DownloadCartView(APIView):
                 )
                 for recipe_ingredient in recipe_ingredients:
                     amount = recipe_ingredient.amount
-                    if ingredient.name in ingredients_summary:
-                        ingredients_summary[ingredient.name]['amount'] += amount
+                    if ingredient.name in summary:
+                        summary[ingredient.name]['amount'] += amount
                     else:
-                        ingredients_summary[ingredient.name] = {
+                        summary[ingredient.name] = {
                             'amount': amount,
                             'measurement_unit': ingredient.measurement_unit
                         }
@@ -226,7 +224,7 @@ class DownloadCartView(APIView):
         output = StringIO()
         writer = csv.writer(output)
         writer.writerow(['Ингредиент', 'Количество', 'Единица измерения'])
-        for name, data in ingredients_summary.items():
+        for name, data in summary.items():
             writer.writerow([name, data['amount'], data['measurement_unit']])
         output.seek(0)
         response = Response(output.getvalue(), content_type='text/csv')

@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.shortcuts import get_object_or_404
+from djoser.serializers import UserSerializer
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.status import HTTP_400_BAD_REQUEST
-from djoser.serializers import UserSerializer
-
-from recipes.models import Tag, Ingredient, Recipe, RecipeIngredient, Favorite, ShoppingCart
 from users.models import Subscription
 
 from .mixins import Base64ImageField
