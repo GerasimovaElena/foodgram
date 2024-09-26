@@ -1,5 +1,4 @@
 from django.urls import include, path
-from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
 from .views import (CustomUserViewSet, DownloadCartView, IngredientViewSet,
@@ -12,11 +11,6 @@ router.register(r'ingredients', IngredientViewSet, basename='ingredient')
 router.register(r'recipes', RecipeViewSet, basename='recipe')
 
 urlpatterns = [
-    path(
-        'docs/',
-        TemplateView.as_view(template_name='redoc.html'),
-        name='docs'
-    ),
     path('recipes/<int:pk>/get-link/', RecipeViewSet.as_view(
         {'get': 'get_short_link'}
     )),
