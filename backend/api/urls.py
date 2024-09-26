@@ -12,9 +12,6 @@ router.register(r'ingredients', IngredientViewSet, basename='ingredient')
 router.register(r'recipes', RecipeViewSet, basename='recipe')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
     path(
         'docs/',
         TemplateView.as_view(template_name='redoc.html'),
@@ -24,4 +21,7 @@ urlpatterns = [
         {'get': 'get_short_link'}
     )),
     path('recipes/download_shopping_cart/', DownloadCartView.as_view()),
+    path('auth/', include('djoser.urls.authtoken')),
+    path('', include(router.urls)),
+    path('', include('djoser.urls')),
 ]
