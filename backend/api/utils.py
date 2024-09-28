@@ -8,7 +8,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 
-def generate_pdf(self, summary):
+def generate_pdf(summary):
     output = BytesIO()
     p = canvas.Canvas(output, pagesize=letter)
     width, height = letter
