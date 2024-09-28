@@ -1,7 +1,3 @@
-import os
-from io import BytesIO
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -9,10 +5,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -26,6 +18,7 @@ from .serializers import (CustomUserSerializer, IngredientSerializer,
                           RecipeMiniSerializer, SubscribeSerializer,
                           SubscriptionSerializer, TagSerializer,
                           UserAvatarSerializer)
+from .utils import generate_pdf
 
 User = get_user_model()
 
@@ -227,32 +220,8 @@ class DownloadCartView(APIView):
                             'measurement_unit': ingredient.measurement_unit
                         }
 
-        pdf_content = self.generate_pdf(summary)
+        pdf_content = generate_pdf(summary)
 
         response = HttpResponse(pdf_content, content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="my_cart.pdf"'
         return response
-
-    def generate_pdf(self, summary):
-        output = BytesIO()
-        p = canvas.Canvas(output, pagesize=letter)
-        width, height = letter
-
-        font_path = os.path.join(settings.BASE_DIR, 'fonts', 'free_serif.ttf')
-        pdfmetrics.registerFont(TTFont('FreeSerif', font_path))
-
-        p.setFont("FreeSerif", 16)
-        p.drawString(100, height - 50, "Список покупок:")
-
-        p.setFont("FreeSerif", 12)
-        y_position = height - 100
-        for name, data in summary.items():
-            text = f"{name} ({data['measurement_unit']}) — {data['amount']}"
-            p.drawString(100, y_position, f"• {text}")
-            y_position -= 20
-
-        p.showPage()
-        p.save()
-        output.seek(0)
-
-        return output.getvalue()

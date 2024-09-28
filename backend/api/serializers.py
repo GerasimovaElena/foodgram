@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from users.models import Subscription
 
-from .mixins import Base64ImageField
+from .fields import Base64ImageField
 
 User = get_user_model()
 
