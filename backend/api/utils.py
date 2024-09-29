@@ -21,10 +21,20 @@ def generate_pdf(summary):
 
     p.setFont("FreeSerif", 12)
     y_position = height - 100
-    for name, data in summary.items():
-        text = f"{name} ({data['measurement_unit']}) — {data['amount']}"
+
+    for item in summary:
+        name = item['ingredient_name']
+        unit = item['measurement_unit']
+        amount = item['amount']
+        text = f'{name} ({unit}) — {amount}'
+
         p.drawString(100, y_position, f"• {text}")
         y_position -= 20
+
+        if y_position < 50:
+            p.showPage()
+            p.setFont("FreeSerif", 12)
+            y_position = height - 50
 
     p.showPage()
     p.save()

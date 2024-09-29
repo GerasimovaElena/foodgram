@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -201,24 +202,18 @@ class DownloadCartView(APIView):
                 status=status.HTTP_200_OK
             )
 
-        summary = {}
-        for item in shopping_cart_items:
-            recipe = item.recipe
-            ingredients = recipe.ingredients.all()
-            for ingredient in ingredients:
-                recipe_ingredients = (
-                    RecipeIngredient.objects
-                    .filter(recipe=recipe, ingredient=ingredient)
-                )
-                for recipe_ingredient in recipe_ingredients:
-                    amount = recipe_ingredient.amount
-                    if ingredient.name in summary:
-                        summary[ingredient.name]['amount'] += amount
-                    else:
-                        summary[ingredient.name] = {
-                            'amount': amount,
-                            'measurement_unit': ingredient.measurement_unit
-                        }
+        recipes_in_cart = shopping_cart_items.values_list('recipe', flat=True)
+
+        summary = (
+            RecipeIngredient.objects
+            .filter(recipe__in=recipes_in_cart)
+            .values(
+                ingredient_name=F('ingredient__name'),
+                measurement_unit=F('ingredient__measurement_unit')
+            )
+            .annotate(amount=Sum('amount'))
+            .order_by('ingredient__name')
+        )
 
         pdf_content = generate_pdf(summary)
 
